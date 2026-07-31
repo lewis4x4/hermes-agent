@@ -124,7 +124,11 @@ export function patchSpectrumTs(root = scriptDir()) {
     "dist"
   );
   if (!fs.existsSync(dist)) {
-    throw new Error(`@spectrum-ts/imessage dist not found: ${dist}`);
+    return {
+      patched: false,
+      file: null,
+      reason: `@spectrum-ts/imessage dist not found: ${dist}`,
+    };
   }
   const files = fs.readdirSync(dist)
     .filter((name) => name.endsWith(".js"))
@@ -169,8 +173,14 @@ if (_invokedDirectly) {
   try {
     const root = process.argv[2] ? path.resolve(process.argv[2]) : scriptDir();
     const result = patchSpectrumTs(root);
-    const action = result.patched ? "patched" : "ok";
-    console.error(`photon-sidecar: spectrum mixed attachment patch ${action}: ${result.file}`);
+    if (!result.file) {
+      console.error(
+        `photon-sidecar: spectrum mixed attachment patch skipped: ${result.reason}`
+      );
+    } else {
+      const action = result.patched ? "patched" : "ok";
+      console.error(`photon-sidecar: spectrum mixed attachment patch ${action}: ${result.file}`);
+    }
   } catch (err) {
     console.error(`photon-sidecar: spectrum mixed attachment patch failed: ${err?.stack || err}`);
     process.exit(1);

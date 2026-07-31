@@ -237,6 +237,21 @@ def _write_fixture(tmp_path: Path) -> Path:
     return chunk
 
 
+def test_spectrum_patch_skips_missing_optional_dist(tmp_path: Path) -> None:
+    """A missing patch target must not make npm postinstall fail Photon setup."""
+    result = subprocess.run(
+        ["node", str(_PATCHER), str(tmp_path)],
+        cwd=Path.cwd(),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "patch skipped" in result.stderr
+    assert "@spectrum-ts/imessage dist not found" in result.stderr
+
+
 def test_spectrum_patch_rewrites_the_imessage_mapper(tmp_path: Path) -> None:
     """The dependency patch must apply to the 8.x `@spectrum-ts/imessage` chunk
     and rewrite both inbound mappers to thread text through attachment bubbles."""
@@ -273,5 +288,4 @@ def test_spectrum_patch_rewrites_the_imessage_mapper(tmp_path: Path) -> None:
     )
     assert again.returncode == 0, again.stderr
     assert chunk.read_text(encoding="utf-8") == patched
-
 
